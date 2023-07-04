@@ -5,6 +5,9 @@ pipeline {
         choice(name: "BRANCH", choices: ["dev", "main"], description: "Branch")
         string(name: "IMAGE_TAG", defaultValue: "v1.0", trim: false, description: "Image Tag")
     }
+    environment {
+        DOCKERHUB_CREDENTIALS = credentials('DOCKER_HUB')
+    }
     stages {
         stage('Assign Variables') {
             steps {
@@ -19,12 +22,7 @@ pipeline {
                     echo "Image tag: ${IMAGE_TAG}"
                 }
             }
-        }
-        stage('Checkout') {
-            steps {
-                git branch: "${env.BRANCH}", url: 'https://github.com/vanekmc1/cicd-pipeline.git'
-            }
-        }     
+        }    
         stage('Build') {
             steps {
                 sh 'npm install'
@@ -37,20 +35,20 @@ pipeline {
         }
         stage('Build Docker Image') {
             steps {
-                sh "docker build -t node${env.BRANCH}:${env.IMAGE_TAG} ."
+                sh "docker build -t vanekmc1\node${env.BRANCH}:${env.IMAGE_TAG} ."
             }
         }
-        stage('Deploy') {
+        stage('Push Docker Image') {
             steps {
-                script {
-                    def PORT
-                    switch(env.BRANCH) { 
-                        case "main": PORT = '3000'; break
-                        case "dev": PORT = '3001'; break
-                    }            
-                    sh "docker rm -f node${env.BRANCH} || echo 'No container found'"
-                    sh "docker run -d --name node${env.BRANCH} --expose ${PORT} -p ${PORT}:3000 node${env.BRANCH}:${env.IMAGE_TAG}"
-                }
+                sh "echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin"
+                sh "docker push vanekmc1\node${env.BRANCH}:${env.IMAGE_TAG}"
+                sh "docker logout"
+            }
+        }
+
+        stage ('Deploy'){
+            steps {
+                build job: "Deploy_to_${env.BRANCH}", wait:true, parameters: [string(name: 'IMAGE_TAG' , value: "${params.IMAGE_TAG}" )]
             }
         }
     }
