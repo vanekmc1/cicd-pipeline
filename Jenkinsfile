@@ -70,7 +70,7 @@ pipeline {
             steps {
                 script {
                     def vulnerabilities = sh(script: "docker run --rm bitnami/trivy image --exit-code 0 --severity HIGH,MEDIUM,LOW --no-progress vanekmc1/node${env.BRANCH}:${env.IMAGE_TAG}", returnStdout: true).trim()
-                    echo "Vulnerability Report:\s${vulnerabilities}"
+                    echo "Vulnerability Report:\n${vulnerabilities}"
                 }
             }
         }
