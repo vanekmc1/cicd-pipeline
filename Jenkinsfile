@@ -35,13 +35,13 @@ pipeline {
         }
         stage('Build Docker Image') {
             steps {
-                sh "docker build -t vanekmc1\node${env.BRANCH}:${env.IMAGE_TAG} ."
+                sh "docker build -t vanekmc1/node${env.BRANCH}:${env.IMAGE_TAG} ."
             }
         }
         stage('Push Docker Image') {
             steps {
                 sh "echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin"
-                sh "docker push vanekmc1\node${env.BRANCH}:${env.IMAGE_TAG}"
+                sh "docker push vanekmc1/node${env.BRANCH}:${env.IMAGE_TAG}"
                 sh "docker logout"
             }
         }
