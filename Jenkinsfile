@@ -25,6 +25,11 @@ pipeline {
             }
         }    
         stage('Build') {
+            agent {
+                docker {
+                    image 'node'
+                }
+            }
             steps {
                 sh 'npm install'
             }
@@ -32,6 +37,21 @@ pipeline {
         stage('Test') {
             steps {
                 sh 'CI=true npm test'
+            }
+        }
+        stage ("Hadolint") {
+            agent {
+                docker {
+                    image 'hadolint/hadolint:latest-debian'
+                }
+            }
+            steps {
+                sh 'hadolint Docerfile | tee -a hadolint_lint.txt'
+            }
+            post {
+                always {
+                    archiveArtifacts 'hadolint_lint.txt'
+                }
             }
         }
         stage('Build Docker Image') {
@@ -44,6 +64,14 @@ pipeline {
                 sh "echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin"
                 sh "docker push vanekmc1/node${env.BRANCH}:${env.IMAGE_TAG}"
                 sh "docker logout"
+            }
+        }
+        stage('Trivy') {
+            steps {
+                script {
+                    def vulnerabilities = sh(script: "docker run --rm bitnami/trivy image --exit-code 0 --severity HIGH,MEDIUM,LOW --no-progress vanekmc1/node${env.BRANCH}:${env.IMAGE_TAG}", returnStdout: true).trim()
+                    echo "Vulnerability Report:\s${vulnerabilities}"
+                }
             }
         }
 
