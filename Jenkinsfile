@@ -1,5 +1,3 @@
-@Library('utils') _
-
 pipeline {
     agent any
     tools {nodejs "node"}
@@ -20,6 +18,7 @@ pipeline {
                     env.BRANCH = BRANCH
                     env.IMAGE_TAG = IMAGE_TAG
 
+                    library("utils@${env.BRANCH}")
                     log.info "Branch: ${BRANCH}"
                     log.info "Image tag: ${IMAGE_TAG}"
                 }
