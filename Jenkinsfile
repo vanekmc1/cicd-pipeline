@@ -46,7 +46,7 @@ pipeline {
                 }
             }
             steps {
-                sh 'hadolint Docerfile | tee -a hadolint_lint.txt'
+                sh 'hadolint Dockerfile | tee -a hadolint_lint.txt'
             }
             post {
                 always {
